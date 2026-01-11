@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>미라정 보카특강</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+      :root{
+        --fg:#222;--muted:#8a8a8a;--bg:#fafafa;--paper:#fff;--chip:#f2f2f2;
+        --primary:#6366f1;
+        --primary-600:#4f46e5;--choice:#f4f4f5;--choice-hover:#ececee;
+        --ok:#22c55e;--bad:#ef4444;--content-w:860px;
+      }
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 "Inter","Noto Sans KR",system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial}
+      .topbar{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid #eee;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+      .brand{margin:0; display:flex; align-items:center;}
+      .brand img {height: 32px; w-auto;}
+      .toolbar{display:flex;gap:8px;align-items:center}
+      .chip{background:var(--chip);padding:6px 12px;border-radius:999px;color:#444;font-size:13px;font-weight:600}
+      .btn{border:0;border-radius:12px;padding:12px 18px;cursor:pointer;transition:.18s transform,.18s background,.18s box-shadow;font-weight:800; font-family: inherit;}
+      .btn:hover{transform:translateY(-1px)}
+      .btn:active{transform:translateY(1px)}
+      .btn-primary{background:var(--primary);color:#fff}
+      .btn-primary:hover{background:var(--primary-600)}
+      .btn-ghost{background:#f3f3f3;color:#333}
+      .btn-ghost:hover{background:#e9e9e9}
+      .btn.small{padding:8px 12px;border-radius:10px}
+      .btn.large{padding:14px 24px; font-size:17px;}
+      .btn.xlarge{padding:16px 32px;font-size:18px; width:100%;}
+      
+      .view{display:none;padding:18px; max-width:var(--content-w); margin:0 auto;}
+      .view.active{display:block}
+      
+      .intro-box{background:#fff; border:1px solid #eee; border-radius:20px; padding:40px; text-align:center; margin-top:40px; box-shadow:0 10px 30px rgba(0,0,0,0.05);}
+      .step-list {text-align:left; max-width:300px; margin:20px auto; color:#555;}
+      .step-list li {margin-bottom:8px;}
+
+      .input-group {margin: 20px 0; display:flex; flex-direction:column; gap:10px; align-items:center;}
+      .input-field {padding:12px; border:1px solid #ddd; border-radius:12px; width:100%; max-width:280px; text-align:center; font-size:16px;}
+      select.input-field {appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;}
+
+      .quiz-container{max-width:600px; margin:40px auto 0 auto; text-align:center;}
+      .progress-bar{height:6px; background:#eee; border-radius:3px; margin-bottom:20px; overflow:hidden;}
+      .progress-fill{height:100%; background:var(--primary); width:0%; transition:width .3s;}
+      
+      .word-display{font-size:48px; font-weight:900; margin:30px 0 40px 0; word-break: keep-all; line-height:1.2;}
+      .word-display span.label{display:block; font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;}
+      
+      .choices{display:grid; grid-template-columns:1fr; gap:12px;}
+      .choice{background:#fff; border:2px solid #eee; border-radius:14px; padding:18px; font-size:18px; font-weight:700; cursor:pointer; transition:.15s;}
+      .choice:hover{background:#f9fafb; border-color:#d1d5db;}
+      .choice.correct{background:#ecfdf5; border-color:var(--ok); color:var(--ok);}
+      .choice.wrong{background:#fef2f2; border-color:var(--bad); color:var(--bad);}
+      
+      .result-view{text-align:center; padding-top:60px;}
+      .score-circle{width:120px; height:120px; background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:900; margin:0 auto 24px auto;}
+      
+      /* 모달 스타일 */
+      .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100; opacity:0; pointer-events:none; transition:.2s;}
+      .modal.show{opacity:1; pointer-events:auto;}
+      .modal-card{background:#fff;border-radius:20px;width:90%;max-width:420px;padding:30px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2); transform:scale(0.9); transition:.2s;}
+      .modal.show .modal-card{transform:scale(1);}
+      .origin-box {background:#f0f9ff; padding:12px; border-radius:8px; margin-top:10px; font-size:14px; color:#0369a1; text-align: left;}
+      .origin-title {font-weight:800; margin-bottom:4px; display:block;}
+
+      @media (max-width:600px){
+        .word-display{font-size:36px;}
+      }
+    </style>
+</head>
+<body>
+
+    <!-- 상단 바 -->
+    <header class="topbar">
+        <div class="brand">
+            <img src="logo.png" alt="미라정 보카특강" onerror="this.style.display='none'; this.parentNode.innerText='미라정 보카특강'">
+        </div>
+        <div class="toolbar">
+            <span id="day-badge" class="chip" style="display:none; background:#e0e7ff; color:var(--primary);">DAY 11</span>
+            <span id="stage-badge" class="chip" style="display:none">Stage 1</span>
+            <button id="home-btn" class="btn btn-ghost small" style="display:none">나가기</button>
+        </div>
+    </header>
+
+    <!-- 1. 메인 화면 -->
+    <section id="view-home" class="view active">
+        <div class="intro-box">
+            <h2 style="font-size:28px; font-weight:900; margin-bottom:10px;">미라정 영어학원</h2>
+            <p style="color:var(--muted);">총 4단계의 코스가 순차적으로 진행됩니다.</p>
+            
+            <ul class="step-list">
+                <li>📌 <strong>STEP 1.</strong> 영단어 → 뜻 찾기</li>
+                <li>📌 <strong>STEP 2.</strong> 뜻 → 영단어 찾기</li>
+                <li>📌 <strong>STEP 3.</strong> 동의어 (Synonym)</li>
+                <li>📌 <strong>STEP 4.</strong> 반의어 (Antonym)</li>
+            </ul>
+
+            <div class="input-group">
+                 <select id="day-select" class="input-field">
+                     <option value="DAY 11">DAY 11 (Prefixes: deca/cent...)</option>
+                     <option value="DAY 12">DAY 12 (Prefixes: bio/eco...)</option>
+                     <option value="DAY 13">DAY 13 (Root: mob, migr...)</option>
+                     <option value="DAY 14">DAY 14 (Root: cede, fare...)</option>
+                     <option value="DAY 15">DAY 15 (Root: grad, sequ...)</option>
+                     <option value="DAY 16">DAY 16 (Root: mount, scend...)</option>
+                     <option value="DAY 17">DAY 17 (Root: lat, gest...)</option>
+                     <option value="DAY 18">DAY 18 (Root: tract, duc...)</option>
+                     <option value="DAY 19">DAY 19 (Root: mit, pos...)</option>
+                     <option value="DAY 20">DAY 20 (Root: port, nav...)</option>
+                 </select>
+                 <input id="user-id" type="text" class="input-field" placeholder="이름/ID 입력">
+            </div>
+            
+            <button class="btn btn-primary xlarge" onclick="app.startSequence()">학습 시작하기</button>
+        </div>
+    </section>
+
+    <!-- 2. 퀴즈 화면 -->
+    <section id="view-quiz" class="view">
+        <div class="quiz-container">
+            <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+            <div class="status" style="display:flex; justify-content:space-between; color:var(--muted); font-size:14px; margin-bottom:20px;">
+                <span id="remain-count">남은 문제: 0</span>
+                <span id="wrong-count" style="color:var(--bad)">오답: 0</span>
+            </div>
+
+            <div id="word-display" class="word-display">
+                <!-- 단어 표시 영역 -->
+            </div>
+
+            <div id="choices" class="choices">
+                <!-- 보기 버튼들이 여기 생성됨 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. 결과 화면 -->
+    <section id="view-result" class="view">
+        <div class="result-view">
+            <div class="score-circle">완료!</div>
+            <h2>모든 과정 종료</h2>
+            <p style="color:var(--muted); margin-bottom:40px;">선택하신 DAY의 학습을 모두 완주하셨습니다.<br>수고하셨습니다!</p>
+            <button class="btn btn-primary large" onclick="location.reload()">처음으로 돌아가기</button>
+        </div>
+    </section>
+
+    <!-- 오답 알림 모달 -->
+    <div id="wrong-modal" class="modal">
+        <div class="modal-card">
+            <h2 style="color:var(--bad); margin-top:0;">오답입니다!</h2>
+            <div id="modal-content" style="margin:20px 0; line-height:1.6; font-size:16px;">
+                <!-- 정답 내용 표시 -->
+            </div>
+            <button id="modal-next-btn" class="btn btn-primary xlarge">다음 문제</button>
+        </div>
+    </div>
+
+    <!-- 단계 완료 알림 모달 (중간 단계용) -->
+    <div id="stage-clear-modal" class="modal">
+        <div class="modal-card">
+            <h2 style="color:var(--primary); margin-top:0;">단계 완료!</h2>
+            <p id="stage-clear-msg" style="margin:20px 0; color:#555;">다음 단계로 넘어갑니다.</p>
+            <button id="next-stage-btn" class="btn btn-primary xlarge">계속하기</button>
+        </div>
+    </div>
+
+    <script>
+    // ==========================================
+    // [데이터 영역] DAY 11~20
+    // ==========================================
+    const VOCA_DB = {
+        "DAY 11": [
+            { en: 'decade', ko: '10년, 10개가 한 벌로 된 것', syn: 'decennium', ant: 'N/A', origin: "deca(십) + de(명접) → 십의 단위로 묶은 것, 10년" },
+            { en: 'century', ko: '100년, 1세기', syn: 'centenary', ant: 'N/A', origin: "cent(백) + ury(명접) → 백의 단위로 묶은 것, 100년" },
+            { en: 'centennial', ko: '100년마다의, 100주년', syn: 'centenary', ant: 'N/A', origin: "cent(백) + enn(1년의) + ial(형접) → 100년이라는 기간의" },
+            { en: 'millennium', ko: '1000년, 새로운 천 년이 시작하는 시기', syn: 'N/A', ant: 'N/A', origin: "mill(천) + enn(1년의) + ium(명접) → 천 년이라는 기간" },
+            { en: 'million', ko: '백만, 백만의, 다수의', syn: 'a great number, multitude', ant: 'N/A', origin: "milli(천) + on(큰) → 천보다 천 배만큼 큰 것, 즉 백만" },
+            { en: 'millionaire', ko: '백만장자, 큰 부자', syn: 'wealthy person, tycoon', ant: 'pauper', origin: "million(백만) + aire(가진 사람) → 백만을 가진 사람" },
+            { en: 'multiple', ko: '많은, 다수의, 배수', syn: 'numerous, various, manifold', ant: 'single', origin: "multi(여럿) + ple(접다) → 여러 번 접어 개수가 많은" },
+            { en: 'multitask', ko: '동시에 여러 일을 처리하다', syn: 'juggle tasks', ant: 'single-task', origin: "multi(여럿) + task(일) → 여러 일을 동시에 함께 처리하다" },
+            { en: 'multipurpose', ko: '다목적의, 여러 용도로 쓰이는', syn: 'versatile, all-purpose', ant: 'specialized', origin: "multi(여럿) + purpose(목적) → 여러 목적으로 쓰는" },
+            { en: 'multicultural', ko: '다문화의, 여러 문화가 공존하는', syn: 'diverse, ethnic', ant: 'monocultural', origin: "multi(여럿) + cultural(문화) → 여러 문화가 함께 있는" },
+            { en: 'multitude', ko: '다수, 수많음, 많은 사람', syn: 'crowd, throng, mass', ant: 'handful', origin: "multi(여럿) + tude(명접) → 여럿, 많은 수가 있음" },
+            { en: 'amazing', ko: '놀라운, 굉장한', syn: 'astonishing, incredible, wonderful', ant: 'boring, ordinary', origin: "a(매우) + maz(당황하게 하다) + ing → 매우 당황하게 할 만큼 놀라운" },
+            { en: 'ashamed', ko: '부끄러운, 수치스러운', syn: 'embarrassed, guilty, humiliated', ant: 'proud, confident', origin: "a(매우) + shamed(부끄럽게 하다) → 매우 부끄러운" },
+            { en: 'alike', ko: '매우 비슷한, 서로 같은, 매우 비슷하게', syn: 'similar, resembling, identical', ant: 'different, unlike', origin: "a(매우) + like(비슷한) → 매우 비슷한" },
+            { en: 'arouse', ko: '일으키다, 자극하다, 깨우다', syn: 'stimulate, provoke, awaken', ant: 'calm, soothe', origin: "a(매우) + rouse(깨우다) → 잠재된 감정을 깨워서 매우 강하게 일으키다" },
+            { en: 'arise', ko: '일어나다, 발생하다', syn: 'occur, happen, emerge', ant: 'cease, end', origin: "a(정말) + rise(일어나다) → 어떤 일이 정말 일어나다/발생하다" },
+            { en: 'atom', ko: '원자, 미립자', syn: 'particle, molecule', ant: 'whole, mass', origin: "a(아닌) + tom(자르다) → 더 이상 잘리지 않는 물질 구성의 기본 입자" },
+            { en: 'abroad', ko: '해외에서, 해외로, 널리, 해외', syn: 'overseas, internationally', ant: 'home, domestically', origin: "a(에) + broad(넓은) → 나라 밖의 더 넓은 지역인 해외에서" },
+            { en: 'aboard', ko: '탑승해 있는, 타고', syn: 'on board, embarked', ant: 'ashore', origin: "a(위에) + board(갑판) → 배의 갑판 위에 탑승해 있는" },
+            { en: 'analyze', ko: '분석하다, 해부하다', syn: 'examine, investigate, study', ant: 'synthesize', origin: "ana(매우) + ly(느슨하게 하다) + ze(동접) → 다 느슨하게 풀어서 매우 자세히 분석하다" },
+            { en: 'anatomy', ko: '해부(학), 분석', syn: 'dissection, structure', ant: 'synthesis', origin: "ana(매우) + tom(자르다) + y(명접) → 어떤 것을 매우 잘게 잘라서 보는 해부" },
+            { en: 'perform', ko: '공연하다, 수행하다', syn: 'execute, carry out, act', ant: 'fail, neglect', origin: "per(완전히) + form(제공하다) → 완전히 다듬어 제공하다, 즉 공연하다" },
+            { en: 'perfect', ko: '완벽한, 완전한, 완성하다', syn: 'flawless, ideal, complete', ant: 'imperfect, flawed', origin: "per(완전히) + fect(만들다) → 완전하게 만들어진, 즉 완벽한" },
+            { en: 'permanent', ko: '(반)영구적인, 오래 지속되는', syn: 'lasting, eternal, enduring', ant: 'temporary, transient', origin: "per(완전히) + man(남다) + ent(형접) → 변하지 않고 완전히 남아 있는" },
+            { en: 'persuade', ko: '설득하다, 납득시키다', syn: 'convince, influence, coax', ant: 'dissuade, discourage', origin: "per(완전히) + suade(충고하다) → 의견이 완전히 넘어오도록 설득하다" },
+            { en: 'persist', ko: '고집하다, 주장하다, 지속하다', syn: 'continue, endure, insist', ant: 'quit, give up', origin: "per(완전히) + sist(서다) → 한 자리에 완전히 자리 잡고 서서 고집하다" },
+            { en: 'perspective', ko: '관점, 시각, 원근법', syn: 'viewpoint, outlook, angle', ant: 'blindness', origin: "per(두루) + spect(보다) + ive(명접) → 전체적으로 두루 보는 관점" },
+            { en: 'perfume', ko: '향기, 향수, 향료', syn: 'fragrance, scent, aroma', ant: 'stench, stink', origin: "per(두루) + fume(향기) → 두루 퍼지는 향기" }
+        ],
+        "DAY 12": [
+            { en: 'biology', ko: '생물학, 생태학', syn: 'life science', ant: 'inorganic chemistry', origin: "bio(생명) + log(말) + y(명접) → 생명에 대해 말하는 생물학" },
+            { en: 'biodiversity', ko: '생물의 다양성', syn: 'ecological diversity', ant: 'monoculture', origin: "bio(생명) + diversity(다양한) → 생명체의 다양성" },
+            { en: 'biofuel', ko: '바이오 연료', syn: 'biological fuel', ant: 'fossil fuel', origin: "bio(생명) + fuel(연료) → 생명체로 만든 바이오 연료" },
+            { en: 'biochemistry', ko: '생화학, 생리', syn: 'biological chemistry', ant: 'N/A', origin: "bio(생명) + chemistry(화학) → 생명체 내의 화학 물질에 대한 학문" },
+            { en: 'ecosystem', ko: '생태계', syn: 'environment, ecology', ant: 'N/A', origin: "eco(환경) + system(체계) → 자연 환경의 체계" },
+            { en: 'eco-friendly', ko: '친환경적인, 환경친화적인', syn: 'environmentally friendly, green', ant: 'polluting, harmful', origin: "eco(환경) + friendly(우호적인) → 자연 환경에 우호적인" },
+            { en: 'economy', ko: '경제, 경기, 절약', syn: 'wealth, financial system, frugality', ant: 'extravagance', origin: "eco(집) + nomy(관리) → 집 또는 국가의 살림살이" },
+            { en: 'geography', ko: '지리(학), 지형', syn: 'terrain, topography, landscape', ant: 'N/A', origin: "geo(땅) + graph(쓰다) + y(명접) → 땅의 모양에 대해 쓰거나 그리는 지리학" },
+            { en: 'geometry', ko: '기하학, 기하학적 구조', syn: 'mathematics of shape', ant: 'N/A', origin: "geo(땅) + metry(재다) → 공간 연구를 위해 땅의 수치를 재는 기하학" },
+            { en: 'geology', ko: '지질(학), 암석 분포', syn: 'earth science', ant: 'N/A', origin: "geo(땅) + log(말) + y(접) → 땅의 구성 물질에 대해 말하는 지질학" },
+            { en: 'geothermal', ko: '지열의, 지열에 관한', syn: 'thermal', ant: 'N/A', origin: "geo(땅) + thermal(열) → 땅에서 나는 열인 지열의" },
+            { en: 'benefit', ko: '이익, 이득, 이익을 주다', syn: 'advantage, gain, profit', ant: 'disadvantage, loss', origin: "bene(좋은) + fit(행하다) → 좋게 행해진 것, 즉 이익" },
+            { en: 'benevolent', ko: '자비로운, 인정 많은, 자선(목적)의', syn: 'kind, charitable, generous', ant: 'malevolent, cruel', origin: "bene(좋은) + vol(의지) + ent(형접) → 좋은 의지를 갖고 상대를 대하는" },
+            { en: 'mistake', ko: '실수, 잘못, 오해하다', syn: 'error, blunder, fault', ant: 'accuracy, correctness', origin: "mis(잘못된) + take(취하다) → 잘못 취해진 행동, 즉 실수" },
+            { en: 'mislead', ko: '잘못 인도하다, 오도하다, 속이다', syn: 'deceive, misguide, fool', ant: 'guide, lead', origin: "mis(잘못된) + lead(이끌다) → 잘못된 방향으로 이끌다" },
+            { en: 'misery', ko: '불행, 고통, 비참(함)', syn: 'suffering, distress, anguish', ant: 'happiness, joy', origin: "mis(잘못된) + ery(명접) → 잘못된 일이 가져오는 불행" },
+            { en: 'misunderstand', ko: '오해하다, 잘못 해석하다', syn: 'misinterpret, misconstrue, confuse', ant: 'understand, comprehend', origin: "mis(잘못된) + understand(이해하다) → 잘못된 내용으로 이해하다" },
+            { en: 'misguide', ko: '잘못 지도하다, 그릇되게 이끌다', syn: 'mislead, misdirect, deceive', ant: 'guide, direct', origin: "mis(잘못된) + guide(안내하다) → 잘못된 방향으로 안내하다" },
+            { en: 'misplace', ko: '잘못된 장소에 두다, 두고 잊어버리다', syn: 'lose, mislay, displace', ant: 'find, locate', origin: "mis(잘못된) + place(놓다) → 어떤 것을 잘못된 장소에 놓다" },
+            { en: 'microphone', ko: '마이크, 확성기', syn: 'mic, transmitter', ant: 'speaker', origin: "micro(작은) + phone(소리) → 작은 소리를 크게 만드는 데 쓰는 마이크" },
+            { en: 'microwave', ko: '전자레인지, 극초단파', syn: 'oven', ant: 'N/A', origin: "micro(작은) + wave(파장) → 아주 작은 전자 파장으로 음식을 데우는 전자레인지" },
+            { en: 'microclimate', ko: '미기후(특정 좁은 지역의 기후)', syn: 'local climate', ant: 'macroclimate', origin: "micro(작은) + climate(기후) → 작은 지역에 국한된 미기후" },
+            { en: 'microscope', ko: '현미경', syn: 'magnifier', ant: 'telescope', origin: "micro(작은) + scope(보다) → 아주 작은 것을 보는 데 쓰는 현미경" },
+            { en: 'telescope', ko: '망원경', syn: 'spyglass', ant: 'microscope', origin: "tele(멀리) + scope(보다) → 멀리 보는 데 쓰는 망원경" },
+            { en: 'telegraph', ko: '전보, 전신, 전보를 치다', syn: 'telegram, wire, cable', ant: 'N/A', origin: "tele(멀리) + graph(쓰다) → 멀리 있는 사람에게 쓰는 전보" },
+            { en: 'telecommunication', ko: '원격 통신, 원거리 전기통신', syn: 'telecom, transmission, broadcasting', ant: 'face-to-face communication', origin: "tele(멀리 있는) + communication(통신) → 멀리 있는 대상과 하는 원격 통신" }
+        ],
+        "DAY 13": [
+            { en: 'mobile', ko: '이동하는, 휴대의, 움직임이 자유로운', syn: 'portable, movable', ant: 'immobile, fixed', origin: "mobile: 움직이다 + ile(형·접) → 움직일 수 있는, 즉 이동하는 또는 휴대의" },
+            { en: 'motion', ko: '움직임, 동작, 운동', syn: 'movement, gesture, action', ant: 'stillness, rest', origin: "mot(움직이다) + ion(명·접) → 움직임, 동작" },
+            { en: 'emotion', ko: '감정, 정서', syn: 'feeling, sentiment, sensation', ant: 'apathy, indifference', origin: "e(밖으로) + mot(움직이다) + ion(명·접) → 마음이 밖으로 움직여 나타나는 감정" },
+            { en: 'promote', ko: '촉진하다, 홍보하다, 승진시키다', syn: 'advance, encourage, advertise', ant: 'demote, hinder', origin: "pro(앞으로) + mot(e)(움직이다) → 앞으로 움직여 더 좋은 자리로 가게 촉진하다 또는 승진시키다" },
+            { en: 'remote', ko: '(거리가) 먼, 외딴, 원격의', syn: 'distant, isolated, far', ant: 'close, near, adjacent', origin: "remot(e)(뒤로 움직이다) → 뒤로 움직여 거리가 먼, 외딴" },
+            { en: 'motive', ko: '주제, 동기, 움직이게 하는', syn: 'reason, cause, incentive', ant: 'deterrent', origin: "motive(움직이다 + 형·접) → 누군가를 움직이게 하는, 움직여서 만들도록 한 것의 주제" },
+            { en: 'motivate', ko: '동기를 부여하다, 자극하다', syn: 'inspire, stimulate, encourage', ant: 'discourage, demotivate', origin: "motive(움직이게 하는) + ate(동·접) → 상대가 움직이게 동기를 부여하다" },
+            { en: 'motor', ko: '원동력, 모터, 자동차', syn: 'engine, machine', ant: 'N/A', origin: "mot(움직이다) + or(명·접) → 움직이게 하는 힘 또는 모터, 모터로 가는 자동차" },
+            { en: 'remove', ko: '제거하다, 치우다', syn: 'eliminate, delete, erase', ant: 'add, include, insert', origin: "re(뒤로) + mov(e)(움직이다) → 뒤로 움직여 안 보이게 제거하다" },
+            { en: 'moment', ko: '순간, 잠깐, 지금', syn: 'instant, second, minute', ant: 'eternity', origin: "mom(움직이다) + ent(명·접) → 움직인 바로 그 순간" },
+            { en: 'migrate', ko: '이동하다, 이주하다', syn: 'move, relocate, travel', ant: 'stay, remain', origin: "migrate: 이동하다(동·접) → 이동하다" },
+            { en: 'emigrate', ko: '(타국으로) 이주하다, 이민 가다', syn: 'move abroad, depart', ant: 'immigrate, return', origin: "e(밖으로) + migrate(이동하다) → 나라 밖으로 이동해서 이민 가다" },
+            { en: 'immigrate', ko: '이주해 오다, 와서 살다', syn: 'settle, move in', ant: 'emigrate, leave', origin: "im(안으로) + migrate(이동하다) → 나라 안으로 이동해서 들어와 살다" },
+            { en: 'passage', ko: '통과, 통로, 통행, (글·음악 등의) 한 구절', syn: 'corridor, path, transit, excerpt', ant: 'blockage, barrier', origin: "pass(통과하다) + age(명·접) → 통과, 통과해 가는 통로" },
+            { en: 'passenger', ko: '승객, 통행인', syn: 'traveler, rider, commuter', ant: 'driver, pilot', origin: "pass(eng)(통과하다) + er(명·접-사람) → 무언가를 타고 통과해서 가는 승객" },
+            { en: 'pastime', ko: '취미, 여가, 기분 전환', syn: 'hobby, leisure, recreation', ant: 'work, labor, occupation', origin: "pas(s)(통과하다) + time(시간) → 시간을 통과해 가기 위해 하는 일, 즉 취미" },
+            { en: 'surpass', ko: '넘어서다, 능가하다', syn: 'exceed, outdo, excel', ant: 'fail, fall behind', origin: "sur(위로) + pass(통과하다) → 다른 것의 위로 통과하다, 즉 넘어서다" },
+            { en: 'compass', ko: '나침반, 컴퍼스; 둘러싸다', syn: 'direction finder; encircle', ant: 'N/A', origin: "com(함께) + pass(통과하다) → 어딘가 통과할 때 함께 가져가는 나침반" },
+            { en: 'passport', ko: '여권, 통행증', syn: 'travel document, pass', ant: 'N/A', origin: "pass(통과하다) + port(항구) → 항구·공항 등을 통과할 때 내는 여권" },
+            { en: 'pace', ko: '걸음, 보폭, 속도; 보조를 맞추다', syn: 'speed, rate, step, stride', ant: 'N/A', origin: "pace(통과하다) → 어딘가 통과하는 걸음, 걸음의 보폭 또는 속도" },
+            { en: 'influence', ko: '영향, 영향력; 영향을 주다', syn: 'effect, impact, authority', ant: 'powerlessness', origin: "in(안으로) + fluence(흐르다) → 안으로 흘러들어와 어떤 효과를 내는 힘" },
+            { en: 'fluent', ko: '(언어가) 유창한, 능수능란한', syn: 'articulate, eloquent, smooth', ant: 'hesitant, inarticulate', origin: "fluent(흐르다 + 형·접) → 술술 흐르듯 유창하게 말하는" },
+            { en: 'fluid', ko: '액체, 유동체; 유동성 있는', syn: 'liquid, solution; flowing', ant: 'solid', origin: "fluid(흐르다 + 명·접) → 흐르는 것, 즉 액체" },
+            { en: 'via', ko: '~를 거쳐, ~를 경유하여, ~을 통해', syn: 'by way of, through', ant: 'N/A', origin: "via(길) → 어딘가 가기 위해 길을 거쳐" },
+            { en: 'obvious', ko: '분명한, 확실한', syn: 'clear, apparent, evident', ant: 'obscure, ambiguous, unclear', origin: "ob(맞서) + vi(길) + ous(형·접) → 길 앞에 맞서 있어 분명히 보이는" },
+            { en: 'trivial', ko: '사소한, 하찮은', syn: 'minor, insignificant, unimportant', ant: 'significant, important, serious', origin: "tri(3) + via(길) + al → 길이 셋으로 갈라져 작고 사소해진 (삼거리의 흔한 일)" },
+            { en: 'convey', ko: '(생각·감정을) 전하다, 나르다', syn: 'communicate, transport, carry', ant: 'retain, withhold', origin: "con(함께) + vey(길) → 길을 갈 때 함께 가져가서 전하다" },
+            { en: 'voyage', ko: '항해, 여행; 항해하다', syn: 'journey, cruise, expedition', ant: 'N/A', origin: "voy(길) + age(명·접) → 바닷길을 가는 것, 즉 항해" }
+        ],
+        "DAY 14": [
+            { en: 'precede', ko: '앞서다, 선행하다, 우선하다', syn: 'come before, antedate', ant: 'follow, succeed', origin: "pre(앞서) + cede(가다) → 다른 것보다 먼저 앞서가다" },
+            { en: 'procedure', ko: '절차, 순서, 수술', syn: 'process, method, operation', ant: 'disorder', origin: "pro(앞으로) + ced(e)(가다) + ure(명·접) → 순서대로 일을 진행해 앞으로 나가는 절차" },
+            { en: 'succeed', ko: '성공하다, ~의 뒤를 잇다', syn: 'thrive, flourish; follow, replace', ant: 'fail; precede', origin: "suc(아래로) + ceed(가다) → 왕위가 아래 후손에게 가는 데 성공하다" },
+            { en: 'exceed', ko: '넘다, 초과하다, 능가하다', syn: 'surpass, outdo, transcend', ant: 'fall short', origin: "ex(밖으로) + ceed(가다) → 정해진 범위 밖으로 가서 그것을 넘다" },
+            { en: 'proceed', ko: '나아가다, 계속하다, 진척되다', syn: 'continue, advance, progress', ant: 'stop, halt, retreat', origin: "pro(앞으로) + ceed(가다) → 앞으로 계속 나아가다" },
+            { en: 'access', ko: '접근하다, 이용하다; 접근(권), 출입(구)', syn: 'approach, entry, admission', ant: 'exit, departure', origin: "ac(~에) + cess(가다) → ~에 가까이 가다, 즉 접근하다" },
+            { en: 'recess', ko: '휴식, (법정의) 휴정; 휴정하다', syn: 'break, pause, intermission', ant: 'continuation', origin: "re(뒤로) + cess(가다) → 뒤로 물러가서 쉬는 휴식" },
+            { en: 'cease', ko: '그만두다, 그치다, 중지하다', syn: 'stop, halt, terminate', ant: 'begin, start, continue', origin: "ceas(e)(가다) → 어떤 일을 하던 중에 가버리다, 즉 그만두다" },
+            { en: 'fare', ko: '(버스/택시 등의) 요금, 승객; 가다, 여행하다', syn: 'fee, charge, toll', ant: 'N/A', origin: "fare(가다) → 가다, 가는 데 드는 요금, 가는 승객" },
+            { en: 'farewell', ko: '작별(인사), 헤어짐; 작별의', syn: 'goodbye, adieu, parting', ant: 'greeting, welcome', origin: "fare(가다) + well(잘) → 잘 가라고 인사하는 작별" },
+            { en: 'welfare', ko: '복지, 번영, 행복; 복지의', syn: 'well-being, prosperity, benefit', ant: 'hardship, misery', origin: "wel(잘) + fare(가다) → 사회나 개인의 삶이 잘 돌아가게 하는 복지" },
+            { en: 'exit', ko: '출구, 퇴장; 나가다', syn: 'way out, door; leave', ant: 'entrance; enter', origin: "ex(밖으로) + it(가다) → 밖으로 나가는 출구" },
+            { en: 'hesitate', ko: '주저하다, 망설이다', syn: 'waver, delay, pause', ant: 'decide, act', origin: "hesitate: 원래 있던 곳에 달라붙은 채로 가기를 주저하다" },
+            { en: 'ambition', ko: '야망, 야심', syn: 'aspiration, goal, desire', ant: 'apathy, indifference', origin: "amb(i)(주변에) + it(가다) + ion(명·접) → 어떤 것의 주변에 가서 그것을 얻으려는 야망" },
+            { en: 'initial', ko: '처음의, 초기의; 이름의 첫 글자', syn: 'first, beginning, primary', ant: 'final, last', origin: "in(안에) + it(가다) + ial(형·접) → 어떤 것 안에 들어가서 가장 먼저인, 즉 처음의" },
+            { en: 'issue', ko: '안건, 문제, 발행(물); 발행하다', syn: 'topic, matter, edition; publish', ant: 'N/A', origin: "iss(밖으로) + ir(가다) → 문제점 또는 신문 등이 밖으로 가서 나타난 것" },
+            { en: 'invade', ko: '쳐들어가다, 침략하다, 침해하다', syn: 'attack, intrude, violate', ant: 'defend, protect, withdraw', origin: "in(안에) + vad(e)(가다) → 다른 대상의 영역 안에 쳐들어가다" },
+            { en: 'evade', ko: '피하다, 회피하다, 빠져나가다', syn: 'avoid, dodge, escape', ant: 'face, confront', origin: "e(밖으로) + vad(e)(가다) → 밖으로 나가서 어떤 것을 피하다" },
+            { en: 'pervade', ko: '널리 퍼지다, 고루 미치다', syn: 'permeate, spread, diffuse', ant: 'N/A', origin: "per(두루) + vad(e)(가다) → 여기저기 두루 가서 널리 퍼지다" },
+            { en: 'tend', ko: '경향이 있다, ~하기 쉽다, 향하여 가다', syn: 'incline, be likely, prone', ant: 'avoid', origin: "tend(뻗다) → 한쪽으로 뻗어서 그쪽으로 가려 하다" },
+            { en: 'attend', ko: '출석하다, 참석하다, 주의를 기울이다', syn: 'be present, participate; pay attention', ant: 'miss, be absent; ignore', origin: "at(쪽으로) + tend(뻗다) → 어떤 장소 쪽으로 발걸음을 뻗어가서 그곳에 출석하다" },
+            { en: 'extend', ko: '뻗다, 확장하다, 연장하다', syn: 'stretch, expand, prolong', ant: 'shorten, contract, reduce', origin: "ex(밖으로) + tend(뻗다) → 현재의 범위 밖으로 뻗어 확장하다" },
+            { en: 'intend', ko: '의도하다, 작정하다, (~하려고) 생각하다', syn: 'plan, aim, mean', ant: 'N/A', origin: "in(안에) + tend(뻗다) → 마음 안의 의도가 어떤 쪽으로 뻗다, 즉 그럴 작정이다" },
+            { en: 'pretend', ko: '~인 척하다, 가장하다', syn: 'fake, simulate, feign', ant: 'be honest, reveal', origin: "pre(앞서) + tend(뻗다) → 실제와 다른 모습이 앞서게 뻗어 보여주다" },
+            { en: 'tender', ko: '다정한, 부드러운, 약한', syn: 'gentle, soft, kind', ant: 'harsh, rough, tough', origin: "tend(er)(뻗다) → 부드러운 손길을 뻗는, 즉 다정한" },
+            { en: 'intense', ko: '강렬한, 치열한, 심한', syn: 'extreme, fierce, severe', ant: 'mild, weak, moderate', origin: "in(안에) + tens(e)(뻗다) → 안으로 신경이 완전히 뻗을 만큼 강렬하고 치열한" },
+            { en: 'tense', ko: '팽팽한, 긴장한; (문법) 시제', syn: 'tight, nervous, strained', ant: 'relaxed, calm, loose', origin: "tens(e)(뻗다) → 쭉 뻗어 팽팽하고 긴장한" }
+        ],
+        "DAY 15": [
+            { en: 'grade', ko: '단계, 등급, 성적, 학년; 등급을 매기다', syn: 'level, rank, mark; rate', ant: 'N/A', origin: "grad(e)(단계) → 순서대로 밟는 단계, 단계별로 매기는 등급" },
+            { en: 'gradually', ko: '차츰, 서서히', syn: 'slowly, steadily, progressively', ant: 'suddenly, abruptly', origin: "gradual(단계) + ly(부·접) → 단계적으로, 차츰" },
+            { en: 'graduate', ko: '졸업하다; (대학) 졸업자', syn: 'finish, complete; alumnus', ant: 'dropout', origin: "grad(u)(단계) + ate(동·접) → 학교에서의 단계를 다 마치다, 즉 졸업하다" },
+            { en: 'upgrade', ko: '(등급, 품질 등을) 올리다; 향상, 업그레이드', syn: 'improve, enhance, raise', ant: 'downgrade', origin: "up(위로) + grad(e)(단계) → 단계나 등급을 위로 올리다" },
+            { en: 'degree', ko: '온도, 각도, 정도, 학위', syn: 'extent, measure, level, diploma', ant: 'N/A', origin: "de(떨어져) + gree(단계) → 온도, 학위 등 단계를 떨어뜨려 그 정도를 표시하는 단위" },
+            { en: 'ingredient', ko: '재료, 성분, 구성 요소', syn: 'component, element, constituent', ant: 'whole', origin: "in(안에) + gred(i)(걸어가다) + ent(명·접) → 어떤 것 안에 걸어 들어간 것, 즉 재료" },
+            { en: 'aggressive', ko: '공격적인, 적극적인', syn: 'hostile, assertive, fierce', ant: 'passive, peaceful, defensive', origin: "ag(~에) + gress(걸어가다) + ive(형·접) → 상대에게로 걸어가서 먼저 공격하려 하는" },
+            { en: 'sequence', ko: '순서, 연속, 연속적인 사건; 차례로 배열하다', syn: 'order, series, succession', ant: 'disorder', origin: "sequ(따라가다) + ence(명·접) → 앞의 것을 따라가면서 나타나는 순서, 연속" },
+            { en: 'consequence', ko: '결과, 결론, 중요성', syn: 'result, outcome, effect', ant: 'cause, origin', origin: "con(함께) + sequence(따라가다) → 어떤 행위를 따라서 함께 나타나는 결과" },
+            { en: 'subsequently', ko: '그 후에, 나중에, 이어서', syn: 'afterwards, later, then', ant: 'previously, beforehand', origin: "subsequent(아래에 따라가다) + ly(부·접) → 순서상 어떤 일의 아래에 따라가면서, 즉 그 후에" },
+            { en: 'execute', ko: '실행하다, 수행하다, 처형하다', syn: 'perform, carry out; kill', ant: 'abandon', origin: "ex(밖으로) + (s)ecu(따라가다) + (a)te(동·접) → 계획에 따라 밖으로 나가 어떤 일을 실행하다" },
+            { en: 'prosecute', ko: '고발하다, 기소하다', syn: 'indict, charge, sue', ant: 'defend, pardon', origin: "pro(앞에) + secu(따라가다) + (a)te(동·접) → 앞에 있는 범죄자를 따라가며 죄를 고발하다" },
+            { en: 'suit', ko: '~에 알맞다; 정장, 소송', syn: 'fit, match; costume, lawsuit', ant: 'clash', origin: "su(it)(따라가다) → 상황을 따라가며 변화해 그에 알맞다" },
+            { en: 'pursue', ko: '추구하다, 추격하다, 계속하다', syn: 'chase, seek, follow', ant: 'give up, flee', origin: "pur(앞으로) + su(e)(따라가다) → 목표 등을 잡기 위해 앞으로 따라가다" },
+            { en: 'event', ko: '행사, 사건, 일', syn: 'occurrence, happening, occasion', ant: 'N/A', origin: "e(밖으로) + vent(오다) → 특별한 일이 밖으로 나와서 진행되는 것" },
+            { en: 'prevent', ko: '막다, 방해하다, 예방하다', syn: 'stop, hinder, avoid, block', ant: 'allow, permit, encourage', origin: "pre(앞에) + vent(오다) → 어떤 것의 앞에 와서 진행을 막다" },
+            { en: 'invent', ko: '발명하다, 지어내다, 창작하다', syn: 'create, devise, originate', ant: 'destroy', origin: "in(안에) + vent(오다) → 머리 안에 어떤 것에 대한 아이디어가 와서 그것을 발명하다" },
+            { en: 'venture', ko: '모험, 벤처 (사업); 모험하다', syn: 'risk, adventure, dare', ant: 'safety, security', origin: "venture(오다) → 인생을 살아가는 중 다가오는 것, 즉 헤쳐나가야 할 모험" },
+            { en: 'adventurous', ko: '모험심이 강한, 모험적인, 위험한', syn: 'daring, bold, risky', ant: 'cautious, timid, safe', origin: "adventur(e)(모험) + ous(쪽으로) → 모험을 하는 쪽으로 가려는" },
+            { en: 'convention', ko: '(특정 집단의) 집회/총회, 관습, 전통', syn: 'assembly, meeting; custom, tradition', ant: 'N/A', origin: "con(함께) + vent(오다) + ion(명·접) → 여럿이 함께 와서 모이는 집회" },
+            { en: 'convenient', ko: '편리한, 손쉬운', syn: 'handy, useful, accessible', ant: 'inconvenient, difficult', origin: "con(함께) + ven(i)(오다) + ent(형·접) → 도움이 함께 와서 편리한" },
+            { en: 'inconvenience', ko: '불편(한 것/사람); ~에게 불편함을 주다', syn: 'trouble, bother, annoyance', ant: 'convenience, comfort', origin: "in(아닌) + conven(ience)(함께 오다) → 도움이 함께 오지 않아 불편함" },
+            { en: 'intervene', ko: '개입하다, 끼어들다, 방해하다', syn: 'interrupt, meddle, interfere', ant: 'ignore, stand by', origin: "inter(사이에) + ven(e)(오다) → 둘 사이에 와서 끼어들다" },
+            { en: 'souvenir', ko: '기념품, 선물', syn: 'memento, keepsake, token', ant: 'N/A', origin: "sou(아래에) + ven(ir)(오다) → 의식 아래에 있던 옛 추억을 의식 위로 올라오게 하는 기념품" },
+            { en: 'avenue', ko: '길, 대로, 방법', syn: 'street, road, boulevard, method', ant: 'N/A', origin: "a(쪽으로) + ven(ue)(오다) → 어떤 것 쪽으로 오는 길, 대로" },
+            { en: 'revenue', ko: '수입, 세입', syn: 'income, earnings, profit', ant: 'expenditure, cost', origin: "re(다시) + ven(ue)(오다) → 노동이나 투자의 대가로 다시 오는 수입" }
+        ],
+        "DAY 16": [
+            { en: 'mount', ko: '올라가다, 증가하다; (산 이름 앞에 Mt.) 산', syn: 'climb, ascend, increase', ant: 'descend, decrease', origin: "mount(오르다) → 어딘가를 올라가다, 수량 등이 올라 증가하다" },
+            { en: 'amount', ko: '총액/총계, 양; ~에 달하다', syn: 'quantity, sum, total', ant: 'N/A', origin: "a(~에) + mount(오르다) → 액수가 올라서 달한 총액" },
+            { en: 'surmount', ko: '(산 등을) 타고 넘다, 극복하다', syn: 'overcome, conquer, surpass', ant: 'yield, fail', origin: "sur(넘어) + mount(오르다) → 산 등을 올라서 넘어가다, 어려움을 넘어 극복하다" },
+            { en: 'prominent', ko: '두드러진, 유명한, 중요한', syn: 'notable, distinguished, famous', ant: 'obscure, unknown', origin: "pro(앞으로) + min(돌출하다) + ent(형·접) → 남들보다 앞으로 돌출되어 있어 두드러지고 유명한" },
+            { en: 'descendant', ko: '자손, 후예', syn: 'offspring, heir, successor', ant: 'ancestor, forefather', origin: "de(아래로) + scend(오르다) + ant(명·접) → 혈통이 아래로 흘러 2, 3세 등 뒤에 붙는 수가 올라간 자손" },
+            { en: 'scandal', ko: '추문, 스캔들, 불명예', syn: 'disgrace, dishonor, shame', ant: 'honor', origin: "scand(오르다) + al(명·접) → 사람들의 입에 오르는 충격적인 소문" },
+            { en: 'scale', ko: '규모, 저울; 오르다, 크기를 조정하다', syn: 'size, magnitude; balance; climb', ant: 'N/A', origin: "scal(e)(오르다) → 무게 등을 재기 위해 오르는 저울, 어떤 것을 잰 규모" },
+            { en: 'lever', ko: '지렛대, 레버; 지렛대로 움직이다', syn: 'handle, crowbar', ant: 'N/A', origin: "lev(올리다) + er(명·접) → 어떤 것을 들어 올리기 위해 사용하는 지렛대" },
+            { en: 'elevate', ko: '(들어) 올리다, 증가시키다', syn: 'raise, lift, promote', ant: 'lower, drop', origin: "e(밖으로) + lev(올리다) + ate(동·접) → 어떤 것을 현재의 자리 밖으로 들어 올리다" },
+            { en: 'irrelevant', ko: '무관한, 엉뚱한, 부적절한', syn: 'unrelated, unconnected', ant: 'relevant, pertinent', origin: "ir(아닌) + re(다시) + lev(올리다) + ant(형·접) → 다시 주제로 올리지 않을 만큼 관련 없는" },
+            { en: 'alleviate', ko: '(고통 등을) 덜다, 완화하다', syn: 'ease, relieve, lessen', ant: 'aggravate, worsen', origin: "al(~쪽으로) + liev(i)(올리다) + ate(동·접) → 몸 상태가 좋은 쪽으로 올라가도록 고통을 덜다" },
+            { en: 'relieve', ko: '(고통 등을) 없애다, 완화하다', syn: 'soothe, comfort, ease', ant: 'intensify, disturb', origin: "re(다시) + liev(e)(올리다) → 상태가 다시 좋은 상태로 올라가도록 통증 등을 없애다" },
+            { en: 'belief', ko: '믿음, 신념, 신뢰', syn: 'faith, trust, confidence', ant: 'doubt, disbelief', origin: "be(만들다) + lief(올리다) → 의심으로 무거운 마음을 가볍게 만들어 들어 올리는 것" },
+            { en: 'result', ko: '결과, 성과; 결과로 생기다', syn: 'outcome, consequence, effect', ant: 'cause', origin: "re(다시) + sult(뛰어오르다) → 어떤 행위를 하면 다시 뛰어올라 나타나는 결과" },
+            { en: 'consult', ko: '상담하다, 상의하다', syn: 'discuss, confer, ask', ant: 'ignore', origin: "con(함께) + sult(뛰어오르다) → 문제 해결을 위해 논의의 장으로 함께 뛰어올라 상담하다" },
+            { en: 'insult', ko: '모욕하다; 모욕, 무례', syn: 'offend, abuse; affront', ant: 'compliment, praise', origin: "in(위로) + sult(뛰어오르다) → 상대의 위로 뛰어올라 모욕감을 느끼게 하다" },
+            { en: 'assault', ko: '공격하다, 폭행하다; 공격, 습격', syn: 'attack, strike, raid', ant: 'defend, protect', origin: "as(~쪽으로) + sault(뛰어오르다) → 상대 쪽으로 뛰어올라 공격하다" },
+            { en: 'salient', ko: '두드러진, 현저한, 핵심적인', syn: 'noticeable, prominent, striking', ant: 'inconspicuous, minor', origin: "sal(i)(뛰어오르다) + ent(형·접) → 높이 뛰어올라 눈에 확 띄는, 즉 두드러지는" },
+            { en: 'incident', ko: '(범죄 등) 사건, 사고', syn: 'event, occurrence, happening', ant: 'N/A', origin: "in(안에) + cid(떨어지다) + ent(명·접) → 본래 있어서는 안 될 범위 안에 떨어진 것" },
+            { en: 'coincidence', ko: '우연의 일치, 동시 발생', syn: 'accident, chance, fluke', ant: 'plan, design', origin: "co(함께) + incidence(발생) → 우연히 두 가지가 함께 발생하는 우연의 일치" },
+            { en: 'accidental', ko: '우연한, 돌발적인, 부수적인', syn: 'unplanned, unintentional, chance', ant: 'deliberate, intentional', origin: "ac(~쪽으로) + cid(떨어지다) + ental(형·접) → 어떤 것이 이유 없이 내 쪽으로 떨어진, 즉 우연한" },
+            { en: 'decay', ko: '썩다, 부패하다; 부패, 쇠퇴', syn: 'rot, decompose, decline', ant: 'flourish, grow', origin: "de(아래로) + cay(떨어지다) → 아래로 떨어져 나올 만큼 썩다" },
+            { en: 'merge', ko: '합병하다, 융합하다', syn: 'combine, unite, blend', ant: 'separate, divide', origin: "merg(e)(흡수하다) → 다른 것을 흡수하여 하나로 합병하다" },
+            { en: 'submerge', ko: '(물속에) 잠기다, 잠수하다', syn: 'immerse, dive, sink', ant: 'surface, float', origin: "sub(아래로) + merg(e)(물에 잠기다) → 물 아래로 깊이 잠기다" },
+            { en: 'emerge', ko: '드러나다, 부상하다, 나오다', syn: 'appear, arise, surface', ant: 'disappear, vanish, hide', origin: "e(밖으로) + merg(e)(물에 잠기다) → 물에 잠겼던 것이 밖으로 드러나다" },
+            { en: 'immerse', ko: '담그다, 가라앉히다, 빠져들게 하다', syn: 'dip, soak, submerge, engross', ant: 'dry', origin: "im(안에) + mers(e)(물에 잠기다) → 물 안에 잠기도록 담그다" }
+        ],
+        "DAY 17": [
+            { en: 'relate', ko: '관련 짓다, 관련이 있다', syn: 'connect, associate, link', ant: 'disconnect, dissociate', origin: "re(다시) + lat(e)(나르다) → 어딘가에 뒀던 것을 다시 날라와 다른 것에 연결시켜 관련 짓다" },
+            { en: 'correlation', ko: '연관성, 상호 관련', syn: 'connection, relationship, link', ant: 'independence', origin: "cor(함께) + relat(e)(관련 짓다) + ion(명·접) → 두 가지가 함께 관련 지어져 생긴 연관성" },
+            { en: 'translate', ko: '번역하다, 해석하다', syn: 'interpret, decode, render', ant: 'N/A', origin: "trans(가로질러) + lat(e)(나르다) → 바다를 가로질러 나르기 위해 다른 언어로 번역하다" },
+            { en: 'congestion', ko: '(교통) 혼잡, (인구) 밀집', syn: 'jam, overcrowding, clogging', ant: 'clearing, emptiness', origin: "con(함께) + gest(나르다) + ion(명·접) → 여럿이 함께 나르느라 생긴 혼잡" },
+            { en: 'digest', ko: '소화시키다; 요약(문)', syn: 'absorb, assimilate; summary', ant: 'N/A', origin: "di(떨어져) + gest(나르다) → 음식을 작게 떨어뜨려 신체 여기저기로 날라 소화시키다" },
+            { en: 'register', ko: '등록하다, 신고하다; 등록부', syn: 'enroll, record, sign up', ant: 'deregister, withdraw', origin: "re(다시) + gist(er)(나르다) → 다시 볼 수 있도록 날라온 정보를 등록하다" },
+            { en: 'exaggerate', ko: '과장하다, 지나치게 강조하다', syn: 'overstate, magnify, embellish', ant: 'understate, minimize', origin: "ex(밖으로) + ag(높이) + ger(나르다) + ate → 밖으로는 크게 보이도록 높이 날라 크기를 과장하다" },
+            { en: 'prefer', ko: '더 좋아하다, 선호하다', syn: 'favor, choose, like better', ant: 'dislike, reject', origin: "pre(앞서) + fer(나르다) → 다른 것보다 앞서 날라 가져올 만큼 더 좋아하다" },
+            { en: 'refer', ko: '참고하다, 언급하다, 인용하다', syn: 'consult, mention, cite', ant: 'ignore', origin: "re(다시) + fer(나르다) → 예전 것을 다시 날라와 참고하거나 언급하다" },
+            { en: 'conference', ko: '회의, 회담, 학회', syn: 'meeting, convention, seminar', ant: 'N/A', origin: "con(함께) + fer(나르다) + ence(명·접) → 여럿이 함께 안건을 날라와서 하는 회의" },
+            { en: 'differ', ko: '다르다, 의견을 달리하다', syn: 'vary, diverge, disagree', ant: 'agree, coincide', origin: "dif(떨어져) + fer(나르다) → 날라서 떨어뜨려 분리할 정도로 다르다" },
+            { en: 'indifferent', ko: '무관심한, 무관한', syn: 'apathetic, unconcerned, disinterested', ant: 'concerned, interested, caring', origin: "in(아닌) + different(다른) → 다른 것과 다르지 않아서 관심을 주지 않는" },
+            { en: 'infer', ko: '추론하다, 암시하다', syn: 'deduce, conclude, imply', ant: 'state directly', origin: "in(안에) + fer(나르다) → 머리 안에서 어떤 일을 끝으로 날라서 결론을 내다" },
+            { en: 'fertile', ko: '비옥한, 다산의', syn: 'productive, fruitful, rich', ant: 'barren, infertile, sterile', origin: "fer(t)(나르다) + ile(형·접) → 날라야 할 생산물이 많이 나오는" },
+            { en: 'ferry', ko: '연락선; 나르다, 수송하다', syn: 'boat, vessel; transport', ant: 'N/A', origin: "ferry(나르다) → 물건이나 사람을 나르는 배인 연락선" },
+            { en: 'defer', ko: '미루다, 연기하다; 경의를 표하다', syn: 'postpone, delay; respect', ant: 'hurry, expedite', origin: "de(떨어져) + fer(나르다) → 다른 것과 떨어지도록 나르는 것을 미루다" },
+            { en: 'cast', ko: '던지다, (그림자를) 드리우다; 던지기', syn: 'throw, toss, project', ant: 'catch, hold', origin: "cast(던지다) → 어떤 것을 던지다" },
+            { en: 'broadcast', ko: '방송하다, 방영하다; 방송', syn: 'air, transmit, televise', ant: 'suppress', origin: "broad(넓은) + cast(던지다) → 음성이나 영상 전파를 널리 던져 방송하다" },
+            { en: 'outcast', ko: '버림받은, 쫓겨난; 따돌려진 사람', syn: 'rejected, abandoned; exile, pariah', ant: 'accepted, favorite', origin: "out(밖으로) + cast(던지다) → 밖으로 던져진, 즉 버림받은" },
+            { en: 'object', ko: '물건, 대상, 목표; 반대하다', syn: 'thing, item, goal; oppose', ant: 'agree, accept', origin: "ob(맞서) + ject(던지다) → 어떤 대상에 맞서 던지는 물건, 맞서는 의견을 던져 반대하다" },
+            { en: 'subject', ko: '지배하에 두다; 과목, 주제, 백성', syn: 'subjugate; topic, theme, citizen', ant: 'liberate', origin: "sub(아래에) + ject(던지다) → 던져서 누군가의 지배 아래에 들어가도록 하다" },
+            { en: 'project', ko: '(연구) 과제, 사업; 계획하다, 투사하다', syn: 'task, scheme; plan, predict', ant: 'N/A', origin: "pro(앞에) + ject(던지다) → 누군가의 앞에 해결하라고 던져진 과제" },
+            { en: 'reject', ko: '거절하다, 거부하다, 부인하다', syn: 'refuse, decline, deny', ant: 'accept, admit, approve', origin: "re(다시) + ject(던지다) → 온 것을 받아들이지 않고 다시 던져서 돌려보내다" },
+            { en: 'inject', ko: '주사하다, 주입하다', syn: 'insert, infuse, administer', ant: 'extract, withdraw', origin: "in(안으로) + ject(던지다) → 약물 등을 몸 안으로 던져 넣다" },
+            { en: 'eject', ko: '튀어나오게 하다, 쫓아내다', syn: 'expel, throw out, discharge', ant: 'absorb, take in', origin: "e(밖으로) + ject(던지다) → 어떤 것을 밖으로 던져 튀어나오게 하다" }
+        ],
+        "DAY 18": [
+            { en: 'attract', ko: '(관심 등을) 끌다, 끌어모으다', syn: 'draw, allure, charm', ant: 'repel, deter', origin: "at(~쪽으로) + tract(끌다) → 관심을 어떤 쪽으로 끌다" },
+            { en: 'contract', ko: '계약하다, 수축하다; 계약(서)', syn: 'agreement, deal; shrink', ant: 'expand, extend', origin: "con(함께) + tract(끌다) → 양쪽 당사자들을 함께 끌어와서 계약하다" },
+            { en: 'distract', ko: '(주의를) 산만하게 하다', syn: 'divert, disturb, confuse', ant: 'focus, concentrate', origin: "dis(떨어져) + tract(끌다) → 어떤 것에서 주의가 떨어지도록 끌어 산만하게 하다" },
+            { en: 'abstract', ko: '추출하다, 끌어내다; 추상적인; 추상(개념)', syn: 'theoretical, conceptual; extract', ant: 'concrete, tangible', origin: "abs(떨어져) + tract(끌다) → 떨어지도록 끌어내 추출하다" },
+            { en: 'extract', ko: '추출하다, 발췌하다; 추출물, 발췌', syn: 'remove, withdraw, derive', ant: 'insert, embed', origin: "ex(밖으로) + tract(끌다) → 안에 있던 것을 밖으로 끌어내 추출하다" },
+            { en: 'subtract', ko: '빼다, 덜다', syn: 'deduct, remove, decrease', ant: 'add, increase', origin: "sub(아래로) + tract(끌다) → 일부를 아래로 끌어내어 수량을 떨어뜨리다" },
+            { en: 'track', ko: '(지나다녀서 생긴) 길, 선로, 경주로; 추적하다', syn: 'path, trail; trace, follow', ant: 'lose', origin: "trac(k)(끌다) → 짐이나 수레를 끌고 다녀서 생긴 길" },
+            { en: 'trace', ko: '자취, 흔적; 추적하다, 따라가다', syn: 'mark, sign; track, pursue', ant: 'ignore', origin: "trac(e)(끌다) → 어떤 것을 끌어서 생긴 자취, 흔적" },
+            { en: 'trade', ko: '거래, 무역; 거래하다, 교역하다', syn: 'commerce, exchange, business', ant: 'keep, hoard', origin: "tra(de)(끌다) → 서로의 물건을 끌고 와서 바꾸는 것, 즉 거래" },
+            { en: 'trail', ko: '자국, 시골길, (특정한) 코스; 뒤쫓다', syn: 'path, track; follow, shadow', ant: 'lead', origin: "trai(l)(끌다) → 어떤 것을 끌고 가서 생긴 자국 또는 길" },
+            { en: 'trait', ko: '특성, 특징', syn: 'characteristic, feature, quality', ant: 'abnormality', origin: "trai(t)(끌다) → 행동을 특정 방향으로 끌고 가는 특성" },
+            { en: 'portray', ko: '묘사하다, 그리다, 보여주다', syn: 'depict, represent, describe', ant: 'obscure, hide', origin: "pro(앞으로) + tray(끌다) → 특징이 잘 보이게 앞으로 끌어내어 묘사하다" },
+            { en: 'treat', ko: '대(접)하다, 다루다, 치료하다; 대접', syn: 'handle, deal with, cure', ant: 'neglect, harm', origin: "treat(끌다) → 상대를 어떤 방향으로 끌고 가다" },
+            { en: 'retreat', ko: '후퇴하다, 물러나다; 후퇴, 철수', syn: 'withdraw, recede', ant: 'advance, attack', origin: "re(뒤로) + treat(끌다) → 있던 자리에서 뒤로 끌어 물러나다" },
+            { en: 'treaty', ko: '조약, 협정', syn: 'agreement, pact, alliance', ant: 'disagreement, conflict', origin: "treat(끌다) + y → 여러 나라를 끌어와서 함께 맺는 조약" },
+            { en: 'produce', ko: '생산하다, 제작하다', syn: 'create, manufacture, yield', ant: 'destroy, consume', origin: "pro(앞으로) + duc(e)(끌다) → 소비자 앞으로 끌고 올 새 제품을 생산하다" },
+            { en: 'reproduce', ko: '재생하다, 번식하다, 복사하다', syn: 'copy, duplicate, breed', ant: 'extinguish', origin: "re(다시) + produce(생산하다) → 한 번 만들었던 것을 다시 생산하다" },
+            { en: 'reduce', ko: '줄이다, 감소하다', syn: 'decrease, diminish, lower', ant: 'increase, enlarge', origin: "re(뒤로) + duc(e)(끌다) → 일부를 뒤로 끌어내 수량을 줄이다" },
+            { en: 'education', ko: '교육(기관), 교육학', syn: 'instruction, schooling, teaching', ant: 'ignorance', origin: "e(밖으로) + duc(끌다) + ation → 내재된 재능을 밖으로 끌어내는 일" },
+            { en: 'conduct', ko: '이끌다, 지휘하다, 실시하다; 지도, 행위', syn: 'lead, manage, behavior', ant: 'mismanage, misconduct', origin: "con(함께) + duc(t)(이끌다) → 여럿을 함께 이끌거나 지휘하다" },
+            { en: 'induce', ko: '유도하다, 유발하다, 설득하다', syn: 'cause, provoke, persuade', ant: 'prevent, discourage', origin: "in(안에) + duc(e)(이끌다) → 안에 들어오도록 이끌다" },
+            { en: 'deduce', ko: '추론하다, 연역하다', syn: 'infer, conclude, reason', ant: 'guess (blindly)', origin: "de(아래로) + duc(e)(이끌다) → 상위의 개념에서 하위 개념을 이끌어내다" },
+            { en: 'compel', ko: '강요하다, 억지로 ~하게 하다', syn: 'force, oblige, coerce', ant: 'allow, permit', origin: "com(함께) + pel(끌어내다) → 억지로 다 함께 끌어내어 강요하다" },
+            { en: 'propel', ko: '나아가게 하다, 추진하다', syn: 'drive, push, launch', ant: 'stop, hinder', origin: "pro(앞으로) + pel(몰다) → 몰아서 앞으로 나아가게 하다" },
+            { en: 'expel', ko: '쫓아내다, 추방하다, 배출하다', syn: 'banish, eject, dismiss', ant: 'admit, welcome', origin: "ex(밖으로) + pel(몰다) → 밖으로 몰아서 쫓아내다" },
+            { en: 'repel', ko: '쫓아버리다, 물리치다', syn: 'drive away, reject, revolt', ant: 'attract, invite', origin: "re(뒤로) + pel(몰다) → 상대를 뒤로 몰아서 쫓아버리다" },
+            { en: 'appeal', ko: '관심을 끌다, 호소하다; 호소, 매력', syn: 'attract, plead; attraction', ant: 'bore, repel', origin: "ap(~에) + peal(끌어내다) → 마음, 관심 등을 끌어내다" },
+            { en: 'pulse', ko: '맥박, 진동, 파동; 맥박치다', syn: 'beat, rhythm, throb', ant: 'stillness', origin: "pul(se)(끌어내다) → 혈액을 끌어내기 위해 뛰는 맥박" },
+            { en: 'impulsive', ko: '충동적인, 행동을 자극하는', syn: 'spontaneous, rash, instinctive', ant: 'cautious, planned', origin: "im(안에) + pul(s)(끌어내다) + ive → 마음 안에 있던 욕구가 갑자기 끌어내진" }
+        ],
+        "DAY 19": [
+            { en: 'submit', ko: '제출하다, 굴복시키다, 복종하다', syn: 'hand in, surrender, yield', ant: 'resist, defy', origin: "sub(아래에) + mit(보내다) → 어떤 사람 아래에 무언가를 보내다 (제출하다)" },
+            { en: 'admit', ko: '받아들이다, 인정하다, 시인하다', syn: 'accept, acknowledge, confess', ant: 'deny, reject', origin: "ad(자신에게) + mit(보내다) → 자신에게 보내진 것을 받아들이다" },
+            { en: 'permit', ko: '허락하다; 면허(증)', syn: 'allow, authorize; license', ant: 'forbid, prohibit', origin: "per(통하여) + mit(보내다) → 통하여 갈 수 있도록 보내주다" },
+            { en: 'emit', ko: '배출하다, 내보내다, 내뿜다', syn: 'release, discharge, radiate', ant: 'absorb, inhale', origin: "e(밖으로) + mit(보내다) → 안에서 밖으로 내보내다" },
+            { en: 'commit', ko: '이행하다, 전념하다, 저지르다', syn: 'dedicate, perform, perpetrate', ant: 'neglect, avoid', origin: "com(함께) + mit(보내다) → 명령과 함께 보내진 사람들이 일을 이행하다" },
+            { en: 'promise', ko: '약속하다; 약속, 전망', syn: 'vow, pledge, assure', ant: 'break (a promise), deceive', origin: "pro(앞에) + mis(e)(보내다) → 앞에 미리 보내서 앞으로 할 일을 약속하다" },
+            { en: 'compromise', ko: '타협하다, 양보하다; 타협, 양보', syn: 'negotiate, settle, concede', ant: 'conflict, dispute', origin: "com(함께) + promise(약속하다) → 중간으로 하자고 함께 약속하다 (타협하다)" },
+            { en: 'dismiss', ko: '해산시키다, 해고하다, 묵살하다', syn: 'discharge, fire, reject', ant: 'hire, accept', origin: "dis(떨어져) + miss(보내다) → 있던 자리에서 떨어뜨려 보내다" },
+            { en: 'mission', ko: '임무, 과제, 선교 (단체)', syn: 'task, assignment, duty', ant: 'hobby, pastime', origin: "mission(보내다) → 사람을 보내어 달성하고자 하는 임무" },
+            { en: 'commission', ko: '위원(회), 수수료; 위임하다, 의뢰하다', syn: 'committee, fee; authorize', ant: 'recall', origin: "com(함께) + mission(임무) → 임무를 함께 맡은 사람들이 모인 위원회" },
+            { en: 'mess', ko: '엉망진창, 곤경; 엉망으로 만들다', syn: 'chaos, disorder, clutter', ant: 'order, tidiness', origin: "mess(보내다) → 어떤 일을 완료하여 보내고 난 뒤의 엉망진창" },
+            { en: 'pose', ko: '자세를 취하다, (문제 등을) 제기하다; 자세', syn: 'model, present; posture', ant: 'withdraw', origin: "pos(e)(놓다) → 카메라 앞에 놓이기 위해 자세를 취하다" },
+            { en: 'positive', ko: '긍정적인, 확신하는, 양성 (반응)의', syn: 'optimistic, certain, confident', ant: 'negative, doubtful', origin: "pos(it)(놓다) + ive → 놓을 자리가 마음에 드는 (긍정적인)" },
+            { en: 'position', ko: '자리, 위치, 입장; 배치하다', syn: 'location, stance, job', ant: 'displacement', origin: "pos(it)(놓다) + ion → 놓는 곳, 자리" },
+            { en: 'suppose', ko: '추정하다, 가정하다', syn: 'assume, guess, presume', ant: 'know, prove', origin: "sup(아래에) + pos(e)(놓다) → 근거를 아래에 깔아 놓고 미루어 생각하다" },
+            { en: 'purpose', ko: '목적, 용도, 의도', syn: 'goal, aim, intent', ant: 'accident', origin: "pur(앞에) + pos(e)(놓다) → 앞에 놓고 이루기 위해 노력하는 목적" },
+            { en: 'expose', ko: '노출시키다, 드러내다, 폭로하다', syn: 'reveal, uncover, disclose', ant: 'hide, conceal', origin: "ex(밖으로) + pos(e)(놓다) → 밖으로 내놓아 노출시키다" },
+            { en: 'oppose', ko: '반대하다, 대항하다', syn: 'resist, fight, object', ant: 'support, agree', origin: "op(대항하여) + pos(e)(놓다) → 상대에게 대항하는 의견을 놓다" },
+            { en: 'compose', ko: '구성하다, 작곡/작문하다, 조립하다', syn: 'create, write, constitute', ant: 'destroy, dismantle', origin: "com(함께) + pos(e)(놓다) → 여러 요소를 함께 놓아 구성하다" },
+            { en: 'posture', ko: '자세, 태도; 자세를 취하다', syn: 'stance, attitude, bearing', ant: 'shapelessness', origin: "post(놓다) + ure → 어떤 것 또는 누군가가 놓여 있는 자세" },
+            { en: 'deposit', ko: '보증금, 예치금; (돈을) 맡기다', syn: 'down payment; bank, store', ant: 'withdrawal; withdraw', origin: "de(아래로) + pos(it)(놓다) → 계약 조건 아래 미리 넣어 두는 보증금" },
+            { en: 'disposable', ko: '처분할 수 있는, 일회용의', syn: 'throwaway, single-use', ant: 'reusable, permanent', origin: "dis(떨어져) + pos(놓다) + able → 떨어뜨려 놓아 처분할 수 있는" },
+            { en: 'component', ko: '구성 요소; 구성 요소를 이루는', syn: 'part, element, ingredient', ant: 'whole', origin: "com(함께) + pon(놓다) + ent → 함께 놓여진 구성 요소" },
+            { en: 'postpone', ko: '연기하다, 뒤로 미루다', syn: 'delay, defer, put off', ant: 'advance, expedite', origin: "post(뒤에) + pon(e)(놓다) → 예정했던 시점보다 뒤에 놓다" },
+            { en: 'compound', ko: '(화학적) 혼합물; 합성의; 혼합하다', syn: 'mixture, blend; combined', ant: 'element; single', origin: "com(함께) + pound(놓다) → 서로 다른 것을 함께 섞어 놓은 혼합물" },
+            { en: 'thesis', ko: '명제, 논제, 학위 논문', syn: 'dissertation, paper, theory', ant: 'fact', origin: "thes(두다) + (s)is → 논리적 판단을 실어둔 문장" },
+            { en: 'hypothesis', ko: '가설, 가정, 추측', syn: 'theory, assumption, speculation', ant: 'proven fact', origin: "hype(아래에) + thes(두다) + (s)is → 결론의 아래에 깔아둔 가설" },
+            { en: 'photosynthesis', ko: '광합성', syn: '(biological process)', ant: '(respiration)', origin: "photo(빛) + syn(함께) + thes(두다) + is → 빛과 함께 둔 것 (광합성)" },
+            { en: 'theme', ko: '주제, 테마', syn: 'subject, topic, motif', ant: 'tangent', origin: "them(e)(두다) → 글이나 작품 등에 실어둔 주제" }
+        ],
+        "DAY 20": [
+            { en: 'port', ko: '항구, 항구 도시', syn: 'harbor, dock', ant: 'inland', origin: "port(항구)" },
+            { en: 'opportunity', ko: '(좋은) 기회, 호기', syn: 'chance, occasion', ant: 'misfortune', origin: "op(향하여) + port(항구) + un(e) + ity → 배가 항구를 향하여 갈 수 있는 기회" },
+            { en: 'support', ko: '지지하다, 지원하다, 떠받치다; 지지, 후원', syn: 'back, assist; aid', ant: 'oppose, hinder', origin: "sup(아래에) + port(운반하다) → 아래에서 떠받치고 운반하며 지지하다" },
+            { en: 'export', ko: '수출(품); 수출하다', syn: 'ship out; trade', ant: 'import', origin: "ex(밖으로) + port(운반하다) → 나라 밖으로 운반해 가는 수출" },
+            { en: 'import', ko: '수입(품); 수입하다', syn: 'bring in', ant: 'export', origin: "im(안에) + port(운반하다) → 나라 안으로 운반해오는 수입" },
+            { en: 'important', ko: '중요한', syn: 'significant, crucial', ant: 'unimportant, trivial', origin: "im(안에) + port(운반하다) + ant → 안에 운반해 들여올 정도로 중요한" },
+            { en: 'navy', ko: '해군, 짙은 남색', syn: 'naval forces', ant: 'army, air force', origin: "nav(배) + y → 배를 타는 군대" },
+            { en: 'navigate', ko: '항해하다, 길을 찾다, 운전하다', syn: 'steer, pilot, guide', ant: 'get lost', origin: "navi(배) + ate(운전하다) → 배를 운전해서 항해하다" },
+            { en: 'career', ko: '(전문적) 직업, 경력', syn: 'profession, vocation', ant: 'hobby', origin: "career(마차) → 마차가 오래 다녀서 생긴 길처럼 오랜 경력" },
+            { en: 'carpenter', ko: '목수', syn: 'woodworker, builder', ant: 'N/A', origin: "car(마차) + penter(만들다) → 마차를 만드는 사람" },
+            { en: 'carrier', ko: '운송인, 운송 회사, 매개체', syn: 'transporter, bearer', ant: 'receiver', origin: "car(ri)(마차) + er → 짐을 싣고 마차를 모는 운송인" },
+            { en: 'carriage', ko: '마차, 운반, 수송', syn: 'coach, transport', ant: 'N/A', origin: "car(ri)(마차) + age → 마차, 마차로 하는 운반" },
+            { en: 'charge', ko: '요금, 책임; 청구하다, 맡기다', syn: 'fee, duty; bill, entrust', ant: 'payment; absolve', origin: "char(ge)(마차) → 마차에 짐을 싣듯이 비용이나 의무를 지운 것" },
+            { en: 'discharge', ko: '방출하다, 해고하다; 방출(물)', syn: 'release, emit, fire', ant: 'charge, hire, retain', origin: "dis(떨어져) + char(ge)(마차) → 마차에서 떨어뜨리듯 밖으로 방출하다" },
+            { en: 'fort', ko: '요새, 성채', syn: 'fortress, stronghold', ant: 'open field', origin: "fort(힘) → 군사적인 힘이 모여 있는 요새" },
+            { en: 'effort', ko: '노력(의 성과), 수고', syn: 'attempt, endeavor, struggle', ant: 'ease, laziness', origin: "ef(밖으로) + fort(힘) → 힘을 밖으로 내보내는 것 (노력)" },
+            { en: 'comfort', ko: '편안(함), 위안; 위로하다', syn: 'ease, relief; console', ant: 'discomfort, distress', origin: "com(모두) + fort(강한) → 주변 모두가 강해서 걱정 없이 편안함" },
+            { en: 'force', ko: '힘, 폭력; 강요하다', syn: 'power, strength; compel', ant: 'weakness; yield', origin: "force(힘) → 힘, 힘으로 강요하다" },
+            { en: 'workforce', ko: '노동력, 노동자', syn: 'personnel, staff, labor', ant: 'management', origin: "work(일) + force(힘) → 노동을 하는 힘" },
+            { en: 'enforce', ko: '강요하다, (법 등을) 집행하다', syn: 'impose, implement, execute', ant: 'neglect, disregard', origin: "en(하게 만들다) + force(힘) → 힘을 써서 어떤 일을 하게 만들다" },
+            { en: 'reinforce', ko: '강화하다, 보강하다', syn: 'strengthen, bolster, support', ant: 'weaken, undermine', origin: "re(다시) + in(하게 만들다) + force(힘) → 힘을 다시 한번 더 강하게 만들다" },
+            { en: 'potent', ko: '강한, 영향력/효력 있는', syn: 'powerful, effective, strong', ant: 'impotent, weak', origin: "potent(힘) → 힘 있는, 즉 강한" },
+            { en: 'possible', ko: '가능한, 있을 수 있는', syn: 'feasible, likely', ant: 'impossible', origin: "pos(s)(힘) + ible → 할 수 있는 힘이 있는 (가능한)" },
+            { en: 'impossible', ko: '불가능한, 있을 수 없는', syn: 'unachievable, hopeless', ant: 'possible', origin: "im(아닌) + possible(가능한) → 가능하지 않은" },
+            { en: 'possess', ko: '소유하다, (능력 등을) 지니다', syn: 'own, have, hold', ant: 'lack, lose', origin: "pos(힘) + sess(앉다) → 왕좌에 앉을 힘이 있어서 그것을 소유하다" }
+        ]
+    };
+
+    // 새로 제공된 구글 앱스 스크립트 URL
+    const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzGqCqUo_HfVYOP4ezWuogvmXhkjcAJtiTe3V0M6ISq9aZsBnPypJXk1Zk9M0LyyZtB/exec';
+
+    // ==========================================
+    // [앱 로직]
+    // ==========================================
+    const app = {
+        stage: 1, 
+        currentDay: "DAY 11", // 기본값 변경
+        queue: [],
+        currentWord: null,
+        totalInitial: 0,
+        wrongCount: 0, 
+        userId: '',
+        startTime: null, 
+        
+        init: function() {
+            document.getElementById('user-id').addEventListener('change', (e) => {
+                this.userId = e.target.value;
+            });
+            document.getElementById('day-select').addEventListener('change', (e) => {
+                this.currentDay = e.target.value;
+            });
+        },
+
+        startSequence: function() {
+            const idInput = document.getElementById('user-id').value.trim();
+            const dayInput = document.getElementById('day-select').value;
+
+            if (!idInput) {
+                alert('기록 저장을 위해 이름을 입력해주세요.');
+                document.getElementById('user-id').focus();
+                return;
+            }
+            this.userId = idInput;
+            this.currentDay = dayInput;
+            
+            // DAY Badge 업데이트
+            const dayBadge = document.getElementById('day-badge');
+            dayBadge.textContent = this.currentDay;
+            dayBadge.style.display = 'inline-block';
+
+            this.startStage(1); 
+        },
+
+        startStage: function(stageNum) {
+            this.stage = stageNum;
+            
+            // 선택된 Day의 데이터를 로드
+            if (!VOCA_DB[this.currentDay]) {
+                alert("데이터 로드 오류");
+                return;
+            }
+            
+            // [수정됨] 스테이지별로 유효한 데이터만 필터링하여 큐 구성
+            let targetData = VOCA_DB[this.currentDay];
+            
+            // Stage 3(동의어): syn 데이터가 있는 것만
+            if (stageNum === 3) {
+                targetData = targetData.filter(w => w.syn && w.syn.trim() !== "");
+            }
+            // Stage 4(반의어): ant 데이터가 있는 것만
+            else if (stageNum === 4) {
+                targetData = targetData.filter(w => w.ant && w.ant.trim() !== "");
+            }
+            
+            this.queue = [...targetData]; // 필터링된 데이터 복사
+            this.queue.sort(() => Math.random() - 0.5); 
+            
+            this.totalInitial = this.queue.length;
+            this.wrongCount = 0;
+            this.startTime = new Date(); 
+
+            // 필터링 결과 문제가 하나도 없으면 바로 다음 단계로 이동
+            if (this.totalInitial === 0) {
+                this.finishStage();
+                return;
+            }
+
+            // UI 업데이트
+            document.getElementById('view-home').classList.remove('active');
+            document.getElementById('view-result').classList.remove('active');
+            document.getElementById('view-quiz').classList.add('active');
+            
+            document.getElementById('home-btn').style.display = 'inline-block';
+            document.getElementById('home-btn').onclick = () => location.reload();
+            
+            const badges = ["", "Step 1. 영단어→뜻", "Step 2. 뜻→영단어", "Step 3. 동의어 찾기", "Step 4. 반의어 찾기"];
+            document.getElementById('stage-badge').textContent = badges[stageNum];
+            document.getElementById('stage-badge').style.display = 'inline-block';
+
+            this.nextQuestion();
+        },
+
+        nextQuestion: function() {
+            if (this.queue.length === 0) {
+                this.finishStage();
+                return;
+            }
+
+            const remain = this.queue.length;
+            const progress = ((this.totalInitial - remain) / this.totalInitial) * 100;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('remain-count').textContent = `남은 문제: ${remain}`;
+            document.getElementById('wrong-count').textContent = `오답: ${this.wrongCount}`;
+
+            this.currentWord = this.queue.shift(); 
+            this.renderQuestion();
+        },
+
+        renderQuestion: function() {
+            const word = this.currentWord;
+            const displayEl = document.getElementById('word-display');
+            const choicesEl = document.getElementById('choices');
+            choicesEl.innerHTML = '';
+
+            let questionText = '';
+            let labelText = '';
+            let answerText = '';
+            let distractors = [];
+
+            if (this.stage === 1) {
+                labelText = "다음 단어의 뜻은?";
+                questionText = word.en;
+                answerText = word.ko;
+                distractors = this.getDistractors('ko', word.ko);
+            }
+            else if (this.stage === 2) {
+                labelText = "다음 뜻을 가진 영단어는?";
+                questionText = word.ko;
+                answerText = word.en;
+                distractors = this.getDistractors('en', word.en);
+            }
+            else if (this.stage === 3) {
+                labelText = "다음 단어의 동의어(Synonym)는?";
+                questionText = word.en;
+                answerText = word.syn || "(동의어 없음)";
+                distractors = this.getDistractors('syn', word.syn);
+            }
+            else if (this.stage === 4) {
+                labelText = "다음 단어의 반의어(Antonym)는?";
+                questionText = word.en;
+                answerText = word.ant || "(반의어 없음)";
+                distractors = this.getDistractors('ant', word.ant);
+            }
+
+            displayEl.innerHTML = `<span class="label">${labelText}</span>${questionText}`;
+            
+            let options = [answerText, ...distractors];
+            options.sort(() => Math.random() - 0.5);
+
+            options.forEach(opt => {
+                const btn = document.createElement('div');
+                btn.className = 'choice';
+                btn.textContent = opt === "" ? "(없음)" : opt;
+                
+                // 정답이 비어있거나 '없음'인 경우 처리 (데이터에 빈 문자열이 있을 수 있음)
+                if(opt === answerText) {
+                    btn.onclick = () => this.checkAnswer(opt, answerText, btn);
+                } else {
+                    btn.onclick = () => this.checkAnswer(opt, answerText, btn);
+                }
+                choicesEl.appendChild(btn);
+            });
+        },
+
+        getDistractors: function(key, currentVal) {
+            // 현재 선택된 Day의 데이터 풀에서 오답을 추출
+            const currentPool = VOCA_DB[this.currentDay];
+            const pool = currentPool
+                .filter(item => item[key] !== currentVal && item[key] !== "") // 정답 아니고 빈값 아닌것
+                .map(item => item[key]);
+            
+            pool.sort(() => Math.random() - 0.5);
+            
+            // 풀이 부족할 경우 기본값 추가
+            while (pool.length < 3) { pool.push('-'); }
+            return pool.slice(0, 3);
+        },
+
+        checkAnswer: function(selected, correct, btnElement) {
+            const choices = document.querySelectorAll('.choice');
+            choices.forEach(c => c.style.pointerEvents = 'none');
+
+            if (selected === correct) {
+                btnElement.classList.add('correct');
+                this.playSound(true);
+                setTimeout(() => this.nextQuestion(), 600);
+            } else {
+                btnElement.classList.add('wrong');
+                this.playSound(false);
+                this.wrongCount++;
+                this.queue.push(this.currentWord); 
+
+                this.sendData(this.currentWord);
+
+                choices.forEach(c => {
+                    if (c.textContent === correct) c.classList.add('correct');
+                });
+
+                setTimeout(() => {
+                    this.showWrongModal(correct);
+                }, 500);
+            }
+        },
+
+        showWrongModal: function(correctAnswer) {
+            const modal = document.getElementById('wrong-modal');
+            const content = document.getElementById('modal-content');
+            const nextBtn = document.getElementById('modal-next-btn');
+
+            const w = this.currentWord;
+            const displayAnswer = correctAnswer === "" ? "(없음)" : correctAnswer;
+            
+            let html = `<p style="color:#666; margin-bottom:5px;">정답은:</p>`;
+            html += `<h1 style="color:var(--primary); margin:0 0 15px 0;">${displayAnswer}</h1>`;
+            
+            html += `<div style="background:#f5f5f5; padding:15px; border-radius:10px; text-align:left; font-size:15px; color:#444;">`;
+            html += `<p style="margin:4px 0;"><strong>단어:</strong> ${w.en}</p>`;
+            html += `<p style="margin:4px 0;"><strong>뜻:</strong> ${w.ko}</p>`;
+            html += `<p style="margin:4px 0;"><strong>동의어:</strong> ${w.syn || '-'}</p>`;
+            html += `<p style="margin:4px 0;"><strong>반의어:</strong> ${w.ant || '-'}</p>`;
+            
+            if (w.origin) {
+                html += `<div class="origin-box">
+                            <span class="origin-title">💡 어원 풀이</span>
+                            ${w.origin}
+                         </div>`;
+            }
+            html += `</div>`;
+
+            content.innerHTML = html;
+            modal.classList.add('show');
+
+            nextBtn.onclick = () => {
+                modal.classList.remove('show');
+                this.nextQuestion();
+            };
+        },
+
+        finishStage: function() {
+            if (this.stage < 4) {
+                const modal = document.getElementById('stage-clear-modal');
+                const msg = document.getElementById('stage-clear-msg');
+                const btn = document.getElementById('next-stage-btn');
+                
+                const nextStepNames = ["", "", "뜻 찾기(Step 2)", "동의어(Step 3)", "반의어(Step 4)"];
+                msg.innerHTML = `수고하셨습니다!<br>곧 <strong>${nextStepNames[this.stage + 1]}</strong> 학습이 시작됩니다.`;
+                
+                modal.classList.add('show');
+                
+                btn.onclick = () => {
+                    modal.classList.remove('show');
+                    this.startStage(this.stage + 1);
+                };
+            } else {
+                document.getElementById('view-quiz').classList.remove('active');
+                document.getElementById('view-result').classList.add('active');
+            }
+        },
+
+        getDuration: function() {
+            if (!this.startTime) return "00:00";
+            const now = new Date();
+            const diffMs = now - this.startTime;
+            const diffSec = Math.floor(diffMs / 1000);
+            const min = Math.floor(diffSec / 60);
+            const sec = diffSec % 60;
+            return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        },
+
+        sendData: function(wrongWordObj) {
+            if(!GOOGLE_SHEET_URL) return;
+
+            const data = {
+                name: this.userId,                  
+                day: `${this.currentDay} - Stage ${this.stage}`, // DAY 정보와 스테이지 함께 전송
+                score: `진행중 (${this.wrongCount}회 오답)`, 
+                wrongWords: wrongWordObj ? `${wrongWordObj.en} (${wrongWordObj.ko})` : "없음", 
+                duration: this.getDuration()        
+            };
+            
+            fetch(GOOGLE_SHEET_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(() => {
+                console.log("오답 데이터 전송 완료");
+            }).catch(e => console.log('전송 실패', e));
+        },
+
+        playSound: function(isCorrect) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            if (isCorrect) {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            }
+        }
+    };
+
+    app.init();
+    </script>
+</body>
+</html>
